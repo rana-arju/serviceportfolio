@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+@variant dark (html.dark &);
+
+
+:root {
+  /* Premium Light Theme Colors matching Logo (Indigo / Royal Blue / Violet Accent) */
+  --background: #f8fafc;
+  --foreground: #090d1f;
+  --card: #ffffff;
+  --card-foreground: #090d1f;
+  --popover: #ffffff;
+  --popover-foreground: #090d1f;
+  --primary: #1e1b4b;
+  --primary-foreground: #f8fafc;
+  --secondary: #eef2f6;
+  --secondary-foreground: #1e1b4b;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #4f46e5; /* Indigo accent matches logo */
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #4f46e5;
+
+  /* Custom Glow Colors */
+  --glow-color: rgba(79, 70, 229, 0.12);
+  --glow-primary: rgba(99, 102, 241, 0.08);
+}
+
+.dark {
+  /* Premium Dark Theme Colors */
+  --background: #030712;
+  --foreground: #f9fafb;
+  --card: #0b0f19;
+  --card-foreground: #f9fafb;
+  --popover: #0b0f19;
+  --popover-foreground: #f9fafb;
+  --primary: #f9fafb;
+  --primary-foreground: #030712;
+  --secondary: #111827;
+  --secondary-foreground: #f9fafb;
+  --muted: #1f2937;
+  --muted-foreground: #9ca3af;
+  --accent: #38bdf8;
+  --accent-foreground: #030712;
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+  --border: #1f2937;
+  --input: #1f2937;
+  --ring: #38bdf8;
+
+  --glow-color: rgba(56, 189, 248, 0.2);
+  --glow-primary: rgba(129, 140, 248, 0.15);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+html {
+  overflow-x: clip;
+}
+
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Base custom interactive states */
+.glow-card {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  box-shadow: 0 0 30px var(--glow-color);
+  pointer-events: none;
+}
+
+.glow-card:hover::after {
+  opacity: 1;
+}
+
+/* Animation utilities */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
