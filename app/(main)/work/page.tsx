@@ -1,19 +1,7 @@
 'use client';
 import React from 'react';
-import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
-import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
-
-export interface Project {
-  slug: string;
-  title: string;
-  industry: string;
-  challenge: string;
-  solution: string;
-  result: string;
-  techs: string[];
-}
+import { ProjectCard, Project } from '@/components/shared/ProjectCard';
 
 export const WORK_PROJECTS: Project[] = [
   {
@@ -23,7 +11,35 @@ export const WORK_PROJECTS: Project[] = [
     challenge: 'Over 40 hours spent weekly manually classifying and routing sales leads from scattered contact forms.',
     solution: 'Built custom AI pipelines utilizing self-hosted n8n and OpenAI models to parse inbound leads and synchronize CRM databases.',
     result: 'Reduced manual labor by 85% and increased response speed to under 2 minutes.',
+    description: 'A custom, end-to-end intelligent automation routing framework parsing high-intent inbound inquiries in real time.',
     techs: ['n8n', 'GoHighLevel', 'OpenAI API', 'Node.js', 'PostgreSQL'],
+    media: {
+      type: 'youtube',
+      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      thumbnail: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=800&auto=format&fit=crop',
+    },
+    timeline: [
+      {
+        phase: 'Phase 1: Analysis',
+        title: 'Lead Flow Mapping',
+        description: 'Audited existing incoming lead sources, contact forms, and email channels to map classification taxonomies.',
+      },
+      {
+        phase: 'Phase 2: Development',
+        title: 'n8n & OpenAI Integrations',
+        description: 'Engineered custom JSON parsing pipelines with OpenAI GPT-4 to extract contact details, budgets, and intent levels.',
+      },
+      {
+        phase: 'Phase 3: Connection',
+        title: 'CRM Sync & Routing',
+        description: 'Synced parsed leads into GoHighLevel with custom automation triggers to notify correct representatives instantly.',
+      },
+      {
+        phase: 'Phase 4: Launch',
+        title: 'A/B Testing & Optimization',
+        description: 'Monitored lead processing rates and refined prompt structures to achieve 99% routing accuracy.',
+      },
+    ],
   },
   {
     slug: 'crm-sales-automation-platform',
@@ -32,7 +48,35 @@ export const WORK_PROJECTS: Project[] = [
     challenge: 'Disconnected customer touchpoints and dropoff in lead followups caused loss of potential bookings.',
     solution: 'Designed and deployed unified CRM pipelines, SMS/Email sequence workflows, and custom calendar booking portals.',
     result: 'Boosted conversion rates by 22% and automated client reminders.',
+    description: 'An all-in-one client engagement and scheduling automation suite maximizing response rates and workflow retention.',
     techs: ['GoHighLevel', 'Zapier', 'PostgreSQL', 'TypeScript'],
+    media: {
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop',
+      thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop',
+    },
+    timeline: [
+      {
+        phase: 'Phase 1: Discovery',
+        title: 'Pipeline Architecture',
+        description: 'Mapped the entire customer journey from initial Facebook/Google ads to final booking.',
+      },
+      {
+        phase: 'Phase 2: Automation',
+        title: 'Campaign & Workflow Setup',
+        description: 'Built multi-channel nurture campaigns including instant SMS follow-ups, emails, and voicemail drops.',
+      },
+      {
+        phase: 'Phase 3: Integration',
+        title: 'Calendar & Portal Config',
+        description: 'Integrated unified calendars with smart buffer times and automated timezone conversion for bookings.',
+      },
+      {
+        phase: 'Phase 4: Delivery',
+        title: 'Staff Training & Handover',
+        description: 'Provided visual dashboards tracking conversion analytics and held walkthrough training for real estate agents.',
+      },
+    ],
   },
   {
     slug: 'custom-saas-dashboard',
@@ -41,7 +85,35 @@ export const WORK_PROJECTS: Project[] = [
     challenge: 'Legacy systems lacked client dashboard portal to track analytics and invoice history.',
     solution: 'Developed dynamic Next.js App Router workspace connected to custom Node API microservices.',
     result: 'Improved client retention by 15% and delivered sub-second page performance.',
+    description: 'A ultra-fast financial tracking workspace supporting modern visualization charts and real-time transaction updates.',
     techs: ['Next.js', 'React', 'Tailwind CSS', 'Node.js', 'Docker', 'AWS'],
+    media: {
+      type: 'image',
+      url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
+      thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
+    },
+    timeline: [
+      {
+        phase: 'Phase 1: UX Design',
+        title: 'Figma Prototyping',
+        description: 'Designed interactive dark-themed dashboard prototypes emphasizing data readability and smooth navigation.',
+      },
+      {
+        phase: 'Phase 2: Frontend',
+        title: 'Next.js App Routing',
+        description: 'Coded responsive, SEO-optimized dashboards with server-side rendered charts and fluid micro-interactions.',
+      },
+      {
+        phase: 'Phase 3: Backend',
+        title: 'API & Docker Setup',
+        description: 'Wrote high-throughput Node.js microservices for invoice generation and wrapped them into Docker containers.',
+      },
+      {
+        phase: 'Phase 4: Scaling',
+        title: 'AWS Deployment',
+        description: 'Deployed onto AWS ECS behind an Application Load Balancer with dynamic auto-scaling policies.',
+      },
+    ],
   },
 ];
 
@@ -66,53 +138,8 @@ export default function WorkPage() {
 
         {/* Project Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {WORK_PROJECTS.map((project) => (
-            <div
-              key={project.slug}
-              className="p-8 rounded-2xl border border-border bg-card shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="space-y-6">
-                <div>
-                  <span className="text-xs font-bold text-accent uppercase tracking-wider">
-                    {project.industry}
-                  </span>
-                  <h3 className="text-xl font-bold text-foreground mt-1">
-                    {project.title}
-                  </h3>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-wider block">Challenge</span>
-                    <p className="text-sm text-foreground">{project.challenge}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-wider block">What We Built</span>
-                    <p className="text-sm text-foreground">{project.solution}</p>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase text-muted-foreground tracking-wider block">Result</span>
-                    <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{project.result}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 mt-8 border-t border-border flex flex-col gap-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {project.techs.map((tech) => (
-                    <span key={tech} className="px-2 py-0.5 rounded bg-muted text-xs font-medium text-muted-foreground">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-                <Link
-                  href={`/work/${project.slug}`}
-                  className="inline-flex items-center gap-1 text-sm font-bold text-accent hover:text-foreground transition-colors group self-start"
-                >
-                  Read Architecture Breakdown <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </Link>
-              </div>
-            </div>
+          {WORK_PROJECTS.map((project, index) => (
+            <ProjectCard key={project.slug} project={project} index={index} />
           ))}
         </div>
       </div>

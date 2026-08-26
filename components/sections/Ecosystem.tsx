@@ -150,6 +150,34 @@ const FirebaseIcon = () => (
   </svg>
 );
 
+const FlutterIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5">
+    <path d="M14.314 0L2.3 12l3.7 3.7L21.684 0h-7.37zm.006 11.407L9.006 16.7l3.712 3.712 8.966-8.966h-7.377z" fill="#40D0FD" />
+    <path d="M12.019 14.394L9.006 16.7l3.013 3.013 3.013-3.013-3.013-2.306z" fill="#02569B" />
+  </svg>
+);
+
+const FastAPIIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#009688" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#009688" className="fill-current" />
+  </svg>
+);
+
+const CICDIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#EC4899" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 12c-2-3-4-5-7-5S1 9.5 1 12s2 5 4 5 5-2 7-5zm0 0c2 3 4 5 7 5s4-2.5 4-5-2-5-4-5-5 2-7 5z" />
+  </svg>
+);
+
+const GraphQLIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#E10098" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12,2 22,8 22,18 12,22 2,18 2,8" />
+    <line x1="12" y1="2" x2="12" y2="22" />
+    <line x1="2" y1="8" x2="22" y2="18" />
+    <line x1="2" y1="18" x2="22" y2="8" />
+  </svg>
+);
+
 const LOGO_MAP: Record<string, React.ReactNode> = {
   'n8n': <N8nIcon />,
   'Zapier': <ZapierIcon />,
@@ -172,6 +200,10 @@ const LOGO_MAP: Record<string, React.ReactNode> = {
   'React': <ReactIcon />,
   'Kubernetes': <KubernetesIcon />,
   'Firebase': <FirebaseIcon />,
+  'Flutter': <FlutterIcon />,
+  'FastAPI': <FastAPIIcon />,
+  'CI/CD': <CICDIcon />,
+  'GraphQL': <GraphQLIcon />,
 };
 
 const PLATFORMS = [
@@ -196,6 +228,10 @@ const PLATFORMS = [
   { name: 'React', category: 'Frontend Library' },
   { name: 'Kubernetes', category: 'Orchestration' },
   { name: 'Firebase', category: 'Backend Platform' },
+  { name: 'Flutter', category: 'Mobile Framework' },
+  { name: 'FastAPI', category: 'High-Perf API' },
+  { name: 'CI/CD', category: 'DevOps Pipelines' },
+  { name: 'GraphQL', category: 'Data Query API' },
 ];
 
 export function Ecosystem() {

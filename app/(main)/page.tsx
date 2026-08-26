@@ -6,6 +6,7 @@ import { Ecosystem } from '@/components/sections/Ecosystem';
 import { WhatWeDo } from '@/components/sections/WhatWeDo';
 import { HowWeThink } from '@/components/sections/HowWeThink';
 import { Solutions } from '@/components/sections/Solutions';
+import { TeamSection } from '@/components/sections/TeamSection';
 import { WhyReplyTentra } from '@/components/sections/WhyReplyTentra';
 import { CapabilitiesMap } from '@/components/sections/CapabilitiesMap';
 import { Testimonials } from '@/components/sections/Testimonials';
@@ -20,6 +21,7 @@ export default function Home() {
       <WhatWeDo />
       <HowWeThink />
       <Solutions />
+      <TeamSection />
       <WhyReplyTentra />
       <CapabilitiesMap />
       <Testimonials />
