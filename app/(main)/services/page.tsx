@@ -1,9 +1,15 @@
-'use client';
 import React from 'react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
-import { Bot, Layers, Code, Check } from 'lucide-react';
+import { Bot, Layers, Code } from 'lucide-react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Our Services | ReplyTentra - Systems Engineering & Custom Software',
+  description: 'We design, build, and support business pipelines, CRM integrations, and full-stack SaaS applications utilizing n8n, GHL, and React systems.',
+  keywords: ['AI Automation', 'n8n Workflow', 'GoHighLevel Setup', 'CRM Customization', 'SaaS Development'],
+};
 
 const SERVICE_SECTIONS = [
   {

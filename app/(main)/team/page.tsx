@@ -1,8 +1,14 @@
-'use client';
 import React from 'react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import Link from 'next/link';
 import { TeamSection } from '@/components/sections/TeamSection';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Our Engineering Team | ReplyTentra',
+  description: 'Meet the ReplyTentra systems engineering team designing custom automations, CRM pipelines, and full-stack software dashboards.',
+  keywords: ['ReplyTentra Team', 'n8n developers', 'Systems engineers'],
+};
 
 export default function TeamPage() {
   return (

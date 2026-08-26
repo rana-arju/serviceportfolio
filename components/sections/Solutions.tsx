@@ -4,11 +4,41 @@ import Link from 'next/link';
 import { SectionHeader } from '../ui/SectionHeader';
 import { ArrowUpRight } from 'lucide-react';
 import { ProjectCard } from '@/components/shared/ProjectCard';
-import { WORK_PROJECTS } from '@/app/(main)/work/page';
+import { DEFAULT_WORK_PROJECTS } from '@/app/(main)/work/ClientWorkPage';
 
 export function Solutions() {
-  // Showcase the first 3 featured solutions on the landing page
-  const featuredProjects = WORK_PROJECTS.slice(0, 3);
+  const [projects, setProjects] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const local = localStorage.getItem('replytentra_recent_works');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        const mapped = parsed.map((p: any) => ({
+          slug: p.slug,
+          title: p.title,
+          industry: p.industry,
+          challenge: p.challenge,
+          solution: p.solution,
+          result: p.result,
+          description: p.description,
+          techs: p.techs || [],
+          media: {
+            type: p.mediaType || 'image',
+            url: p.mediaUrl || p.thumbnail,
+            thumbnail: p.thumbnail,
+          },
+          timeline: p.timeline || [],
+        }));
+        setProjects(mapped.slice(0, 3));
+      } catch (e) {
+        console.error('Error parsing projects', e);
+        setProjects(DEFAULT_WORK_PROJECTS.slice(0, 3));
+      }
+    } else {
+      setProjects(DEFAULT_WORK_PROJECTS.slice(0, 3));
+    }
+  }, []);
 
   return (
     <section className="py-20 sm:py-28 bg-background">
@@ -28,7 +58,7 @@ export function Solutions() {
         </div>
 
         <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {featuredProjects.map((project, i) => (
+          {projects.map((project, i) => (
             <ProjectCard
               key={project.slug}
               project={project}

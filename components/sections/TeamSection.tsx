@@ -31,7 +31,7 @@ const TEAM_MEMBERS = [
     bio: 'Expert in cloud infrastructure, high-throughput microservices, and secure API gateways. Leads server automation pipelines and backend scale design.',
     image: '/emon.jpg',
     linkedin: 'https://www.linkedin.com/in/mostafizemon/',
-    github: 'https://github.com',
+    github: 'https://github.com/mostafizemon',
   },
 ];
 

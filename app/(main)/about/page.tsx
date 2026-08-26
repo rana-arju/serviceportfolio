@@ -1,9 +1,14 @@
-'use client';
 import React from 'react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { ShieldCheck, Heart, Users, Target } from 'lucide-react';
-import { motion } from 'framer-motion';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'About ReplyTentra | Systems Engineering for Business Scale',
+  description: 'ReplyTentra was built to design custom-engineered automation environments utilizing n8n, Zapier, GoHighLevel, and standalone applications to unify workflows.',
+  keywords: ['About ReplyTentra', 'Systems Engineering', 'Workflows automation', 'ReplyTentra Team'],
+};
 
 const PRINCIPLES = [
   {
@@ -70,13 +75,9 @@ export default function AboutPage() {
             {PRINCIPLES.map((p, i) => {
               const Icon = p.icon;
               return (
-                <motion.div
+                <div
                   key={p.title}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="p-6 rounded-xl border border-border bg-card flex gap-4 shadow-sm"
+                  className="p-6 rounded-xl border border-border bg-card flex gap-4 shadow-sm hover:border-accent/30 transition-all duration-300"
                 >
                   <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
                     <Icon className="w-5 h-5" />
@@ -85,7 +86,7 @@ export default function AboutPage() {
                     <h3 className="font-bold text-base text-foreground">{p.title}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
