@@ -29,8 +29,8 @@ const TEAM_MEMBERS = [
     name: 'Mostafizur Rahman Emon',
     role: 'Co-Founder & Lead Systems Architect',
     bio: 'Expert in cloud infrastructure, high-throughput microservices, and secure API gateways. Leads server automation pipelines and backend scale design.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    linkedin: 'https://linkedin.com',
+    image: '/emon.jpg',
+    linkedin: 'https://www.linkedin.com/in/mostafizemon/',
     github: 'https://github.com',
   },
 ];
