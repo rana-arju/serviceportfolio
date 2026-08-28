@@ -16,7 +16,9 @@ import {
   X,
   UserCheck,
   CheckCircle,
-  Eye
+  Eye,
+  EyeOff,
+  Menu
 } from 'lucide-react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 
@@ -146,6 +148,8 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userRole, setUserRole] = useState<'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR'>('ADMIN');
   const [authError, setAuthError] = useState('');
 
@@ -184,6 +188,8 @@ export default function AdminDashboard() {
   });
   const [newTech, setNewTech] = useState('');
 
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6007/api/v1';
+
   // Hydration effect & Auth loading
   useEffect(() => {
     // Authenticate checks
@@ -193,10 +199,15 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
       setUserRole(parsed.role);
       setUsername(parsed.username);
+      
+      if (parsed.accessToken) {
+        loadRealBackendData(parsed.accessToken);
+      } else {
+        loadAllData();
+      }
+    } else {
+      loadAllData();
     }
-
-    // Load data
-    loadAllData();
   }, []);
 
   const loadAllData = () => {
@@ -214,31 +225,77 @@ export default function AdminDashboard() {
     setWorks(worksData);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const loadRealBackendData = async (token: string) => {
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
+
+      const [contactsRes, bookingsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/contact`, { headers }),
+        fetch(`${API_BASE_URL}/booking`, { headers }),
+      ]);
+
+      if (contactsRes.ok) {
+        const contactsData = await contactsRes.json();
+        setContacts(contactsData.data);
+      }
+      if (bookingsRes.ok) {
+        const bookingsData = await bookingsRes.json();
+        setBookings(bookingsData.data);
+      }
+
+      let worksData = JSON.parse(localStorage.getItem(WORKS_KEY) || '[]');
+      if (worksData.length === 0) {
+        localStorage.setItem(WORKS_KEY, JSON.stringify(DEFAULT_WORKS));
+        worksData = DEFAULT_WORKS;
+      }
+      setWorks(worksData);
+    } catch (error) {
+      console.error('Failed to load data from backend:', error);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
 
-    // Predefined Roles Credentials:
-    // superadmin / superadmin123 -> SUPER_ADMIN
-    // admin / admin123 -> ADMIN
-    // moderator / moderator123 -> MODERATOR
-    let role: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | null = null;
-    if (username === 'superadmin' && password === 'superadmin123') {
-      role = 'SUPER_ADMIN';
-    } else if (username === 'admin' && password === 'admin123') {
-      role = 'ADMIN';
-    } else if (username === 'moderator' && password === 'moderator123') {
-      role = 'MODERATOR';
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: username, // field bound to username is email address
+          password,
+        }),
+      });
 
-    if (role) {
-      const session = { username, role, time: Date.now() };
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      const role = data.user.role;
+      const session = {
+        username: data.user.displayName || data.user.username,
+        email: data.user.email,
+        role: role,
+        accessToken: data.accessToken,
+        time: Date.now(),
+      };
       localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+
       setIsAuthenticated(true);
       setUserRole(role);
       setAuthError('');
-    } else {
-      setAuthError('Invalid username or password. Try superadmin/superadmin123, admin/admin123 or moderator/moderator123.');
+
+      loadRealBackendData(data.accessToken);
+    } catch (err: any) {
+      setAuthError(err.message || 'Invalid email or password.');
     }
   };
 
@@ -397,28 +454,37 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Username</label>
+             <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Email Address</label>
               <input
-                type="text"
+                type="email"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. superadmin, admin, moderator"
+                placeholder="e.g. admin@example.com"
                 className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] pl-4 pr-10 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             <button
@@ -428,27 +494,6 @@ export default function AdminDashboard() {
               Sign In to Dashboard
             </button>
           </form>
-
-          <div className="rounded-xl border border-slate-800/40 bg-slate-900/30 p-4 space-y-2.5 text-xs text-slate-400">
-            <span className="font-bold text-slate-300 block">Demonstration Credentials:</span>
-            <div className="grid grid-cols-2 gap-2 text-[11px] leading-tight">
-              <div>
-                <span className="font-semibold text-accent block">SUPER_ADMIN:</span>
-                user: <code className="text-slate-200 bg-slate-800 px-1 rounded">superadmin</code><br />
-                pass: <code className="text-slate-200 bg-slate-800 px-1 rounded">superadmin123</code>
-              </div>
-              <div>
-                <span className="font-semibold text-indigo-400 block">ADMIN:</span>
-                user: <code className="text-slate-200 bg-slate-800 px-1 rounded">admin</code><br />
-                pass: <code className="text-slate-200 bg-slate-800 px-1 rounded">admin123</code>
-              </div>
-              <div className="col-span-2 border-t border-slate-800/40 pt-2 mt-1">
-                <span className="font-semibold text-emerald-400 block">MODERATOR (Read-only for portfolio):</span>
-                user: <code className="text-slate-200 bg-slate-800 px-1 rounded">moderator</code><br />
-                pass: <code className="text-slate-200 bg-slate-800 px-1 rounded">moderator123</code>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -459,22 +504,64 @@ export default function AdminDashboard() {
     <div className="relative min-h-screen bg-[#030712] text-slate-100 flex flex-col md:flex-row font-sans overflow-x-hidden">
       <AnimatedBackground />
 
+      {/* Mobile Top Header Bar */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-800/80 bg-[#0b0f19] relative z-30">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white">
+            <LayoutDashboard className="w-4.5 h-4.5" />
+          </div>
+          <div>
+            <h2 className="font-black text-sm uppercase tracking-wider text-white">ReplyTentra</h2>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 text-slate-400 hover:text-white focus:outline-none cursor-pointer"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        />
+      )}
+
       {/* Sidebar Panel */}
-      <aside className="relative z-20 w-full md:w-64 bg-[#0b0f19]/90 border-b md:border-b-0 md:border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl">
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0b0f19]/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl transition-transform duration-300 md:relative md:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}
+      >
         <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white shadow-lg shadow-accent/20">
-              <LayoutDashboard className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white shadow-lg shadow-accent/20">
+                <LayoutDashboard className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-black text-sm uppercase tracking-wider text-white">ReplyTentra</h2>
+                <span className="text-[10px] font-bold text-slate-400">ADMIN CONTROL CENTER</span>
+              </div>
             </div>
-            <div>
-              <h2 className="font-black text-sm uppercase tracking-wider text-white">ReplyTentra</h2>
-              <span className="text-[10px] font-bold text-slate-400">ADMIN CONTROL CENTER</span>
-            </div>
+            {/* Close Button on Mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="md:hidden p-1.5 text-slate-400 hover:text-white rounded-lg focus:outline-none cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           <nav className="space-y-1">
             <button
-              onClick={() => setActiveTab('overview')}
+              onClick={() => {
+                setActiveTab('overview');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'overview'
                   ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
@@ -486,7 +573,10 @@ export default function AdminDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab('contacts')}
+              onClick={() => {
+                setActiveTab('contacts');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'contacts'
                   ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
@@ -503,7 +593,10 @@ export default function AdminDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab('bookings')}
+              onClick={() => {
+                setActiveTab('bookings');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'bookings'
                   ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
@@ -520,7 +613,10 @@ export default function AdminDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab('works')}
+              onClick={() => {
+                setActiveTab('works');
+                setIsSidebarOpen(false);
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'works'
                   ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
