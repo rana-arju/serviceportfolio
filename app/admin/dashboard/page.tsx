@@ -1157,7 +1157,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-slate-400 truncate">{item.interest} • {item.budget}</p>
                       </div>
                       <span className="text-[10px] text-slate-500 whitespace-nowrap font-medium">
-                        {new Date(item.date).toLocaleDateString()}
+                        {new Date(item.createdAt || item.date).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
@@ -1188,7 +1188,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-slate-400 truncate">{item.service} • Slot {item.time}</p>
                       </div>
                       <span className="text-[10px] text-slate-500 whitespace-nowrap font-medium">
-                        {item.date}
+                        {new Date(item.createdAt || item.date).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
@@ -1218,7 +1218,7 @@ export default function AdminDashboard() {
                     <th className="px-6 py-4">Sender</th>
                     <th className="px-6 py-4">Interest Area</th>
                     <th className="px-6 py-4">Budget</th>
-                    <th className="px-6 py-4">Submitted At</th>
+                    <th className="px-6 py-4">Created At</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -1239,7 +1239,7 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(item.date).toLocaleString()}
+                        {new Date(item.createdAt || item.date).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
@@ -1282,7 +1282,7 @@ export default function AdminDashboard() {
                     <th className="px-6 py-4">Client</th>
                     <th className="px-6 py-4">Service Required</th>
                     <th className="px-6 py-4">Preferred Slot</th>
-                    <th className="px-6 py-4">Received At</th>
+                    <th className="px-6 py-4">Created At</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -1304,7 +1304,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(item.created).toLocaleString()}
+                        {new Date(item.createdAt || item.created).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
