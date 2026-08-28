@@ -1157,7 +1157,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-slate-400 truncate">{item.interest} • {item.budget}</p>
                       </div>
                       <span className="text-[10px] text-slate-500 whitespace-nowrap font-medium">
-                        {new Date(item.createdAt || item.date).toLocaleDateString()}
+                        {new Date(item.date).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
@@ -1188,7 +1188,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-slate-400 truncate">{item.service} • Slot {item.time}</p>
                       </div>
                       <span className="text-[10px] text-slate-500 whitespace-nowrap font-medium">
-                        {new Date(item.createdAt || item.date).toLocaleDateString()}
+                        {new Date(item.created).toLocaleDateString()}
                       </span>
                     </div>
                   ))}
@@ -1239,7 +1239,7 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(item.createdAt || item.date).toLocaleString()}
+                        {new Date(item.date).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
@@ -1304,7 +1304,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-xs text-slate-400">
-                        {new Date(item.createdAt || item.created).toLocaleString()}
+                        {new Date(item.created).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
