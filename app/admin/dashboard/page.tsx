@@ -154,12 +154,13 @@ export default function AdminDashboard() {
   const [authError, setAuthError] = useState('');
 
   // Active section
-  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'bookings' | 'works'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'bookings' | 'works' | 'users' | 'settings'>('overview');
 
   // Loaded DB data state
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [bookings, setBookings] = useState<BookingSubmission[]>([]);
   const [works, setWorks] = useState<RecentWork[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
 
   // Detailed Modal views
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null);
@@ -167,6 +168,28 @@ export default function AdminDashboard() {
 
   // Validation feedback state
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // User CRUD states
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [userForm, setUserForm] = useState({
+    displayName: '',
+    email: '',
+    password: '',
+    role: 'ADMIN',
+    status: 'ACTIVE'
+  });
+  const [userSuccess, setUserSuccess] = useState('');
+  const [userError, setUserError] = useState('');
+
+  // Password Change Form
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   // Recent Work CRUD Modals
   const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
@@ -225,6 +248,28 @@ export default function AdminDashboard() {
     setWorks(worksData);
   };
 
+  const loadUsers = async () => {
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsed.accessToken}`,
+        },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setUsers(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    }
+  };
+
   const loadRealBackendData = async (token: string) => {
     try {
       const headers = {
@@ -244,6 +289,15 @@ export default function AdminDashboard() {
       if (bookingsRes.ok) {
         const bookingsData = await bookingsRes.json();
         setBookings(bookingsData.data);
+      }
+
+      // Load users list if user role is ADMIN or SUPER_ADMIN
+      const session = localStorage.getItem(AUTH_KEY);
+      if (session) {
+        const parsed = JSON.parse(session);
+        if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN') {
+          loadUsers();
+        }
       }
 
       let worksData = JSON.parse(localStorage.getItem(WORKS_KEY) || '[]');
@@ -303,6 +357,129 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem(AUTH_KEY);
     setIsAuthenticated(false);
+  };
+
+  const handleCreateOrUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError('');
+    setUserSuccess('');
+
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    try {
+      if (editingUser) {
+        // Edit User
+        const response = await fetch(`${API_BASE_URL}/users/${editingUser.id}/role-status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${parsed.accessToken}`,
+          },
+          body: JSON.stringify({
+            role: userForm.role,
+            status: userForm.status
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to update user');
+
+        setUserSuccess('User updated successfully!');
+        setIsUserModalOpen(false);
+        loadUsers();
+      } else {
+        // Create User
+        const response = await fetch(`${API_BASE_URL}/users/create-admin-or-superadmin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${parsed.accessToken}`,
+          },
+          body: JSON.stringify({
+            displayName: userForm.displayName,
+            email: userForm.email,
+            password: userForm.password,
+            role: userForm.role
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to create user');
+
+        setUserSuccess('User created successfully!');
+        setIsUserModalOpen(false);
+        loadUsers();
+      }
+    } catch (err: any) {
+      setUserError(err.message || 'An error occurred.');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsed.accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to delete user');
+
+      loadUsers();
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete user.');
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsed.accessToken}`,
+        },
+        body: JSON.stringify({
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to change password');
+
+      setPasswordSuccess('Password updated successfully!');
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err: any) {
+      setPasswordError(err.message || 'Failed to change password.');
+    }
   };
 
   // CRUD actions for Recent Work
@@ -626,6 +803,43 @@ export default function AdminDashboard() {
             >
               <Briefcase className="w-4 h-4" />
               <span>Recent Works</span>
+            </button>
+
+            {(userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') && (
+              <button
+                onClick={() => {
+                  setActiveTab('users');
+                  setIsSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === 'users'
+                    ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>Manage Admins</span>
+                {users.length > 0 && (
+                  <span className="ml-auto bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    {users.length}
+                  </span>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                setActiveTab('settings');
+                setIsSidebarOpen(false);
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === 'settings'
+                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+              }`}
+            >
+              <Edit2 className="w-4 h-4" />
+              <span>Settings</span>
             </button>
           </nav>
         </div>
@@ -1006,6 +1220,160 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* 5. USER MANAGEMENT */}
+        {activeTab === 'users' && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') && (
+          <div className="p-6 rounded-2xl border border-slate-800 bg-[#0b0f19]/80 shadow-md space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg text-white">System Administrators</h3>
+                <p className="text-xs text-slate-400 mt-1">Create and manage admin workspace access.</p>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingUser(null);
+                  setUserForm({ displayName: '', email: '', password: '', role: 'ADMIN', status: 'ACTIVE' });
+                  setUserSuccess('');
+                  setUserError('');
+                  setIsUserModalOpen(true);
+                }}
+                className="px-4 py-2 bg-accent text-white rounded-xl text-xs font-bold hover:bg-indigo-500 transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-lg shadow-accent/25"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Admin</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {users.map((user) => (
+                <div key={user.id} className="p-6 rounded-xl border border-slate-800 bg-[#080b11]/80 hover:border-slate-700/80 transition-all flex flex-col justify-between gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1 min-w-0">
+                        <h4 className="font-bold text-base text-white truncate">{user.displayName}</h4>
+                        <span className="text-xs text-slate-400 block truncate">{user.email}</span>
+                      </div>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase ${
+                        user.role === 'SUPER_ADMIN'
+                          ? 'bg-accent/10 border-accent/30 text-accent'
+                          : 'bg-purple-500/10 border-purple-500/30 text-purple-400'
+                      }`}>
+                        {user.role}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1.5">
+                      <span className={`w-2 h-2 rounded-full ${user.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                      <span className="text-xs font-medium text-slate-300">{user.status === 'ACTIVE' ? 'Active' : 'Suspended'}</span>
+                      <span className="text-[10px] text-slate-500 font-medium ml-auto">Created {new Date(user.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-800/40">
+                    <button
+                      onClick={() => {
+                        setEditingUser(user);
+                        setUserForm({
+                          displayName: user.displayName,
+                          email: user.email,
+                          password: '',
+                          role: user.role,
+                          status: user.status
+                        });
+                        setUserSuccess('');
+                        setUserError('');
+                        setIsUserModalOpen(true);
+                      }}
+                      disabled={userRole === 'ADMIN' && user.role === 'SUPER_ADMIN'}
+                      className="flex-1 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-[11px] font-bold border border-slate-800 text-slate-300 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={(userRole === 'ADMIN' && (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN')) || user.email === username}
+                      className="p-1.5 rounded-lg bg-red-950/20 hover:bg-red-900/30 text-red-400 border border-red-900/40 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {users.length === 0 && (
+                <div className="col-span-2 py-12 text-center text-slate-500 italic text-xs">
+                  No administrators fetched.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 6. SETTINGS (CHANGE PASSWORD) */}
+        {activeTab === 'settings' && (
+          <div className="p-6 rounded-2xl border border-slate-800 bg-[#0b0f19]/80 shadow-md space-y-6 max-w-lg animate-fade-in">
+            <div>
+              <h3 className="font-bold text-lg text-white">Security Settings</h3>
+              <p className="text-xs text-slate-400 mt-1">Change your admin console account password.</p>
+            </div>
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              {passwordSuccess && (
+                <div className="rounded-lg border border-emerald-900 bg-emerald-950/40 p-3 text-xs text-emerald-400 font-semibold">
+                  {passwordSuccess}
+                </div>
+              )}
+              {passwordError && (
+                <div className="rounded-lg border border-red-900 bg-red-950/40 p-3 text-xs text-red-400 font-semibold">
+                  {passwordError}
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.oldPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-accent hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-accent/20 cursor-pointer"
+              >
+                Update Password
+              </button>
+            </form>
           </div>
         )}
       </main>
@@ -1524,6 +1892,116 @@ export default function AdminDashboard() {
                     Save Changes
                   </button>
                 )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD / EDIT USER MODAL */}
+      {isUserModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-[#0b0f19] border border-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto animate-fade-in">
+            <button
+              onClick={() => setIsUserModalOpen(false)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-accent uppercase tracking-widest block">Account access</span>
+              <h3 className="text-xl font-bold text-white">{editingUser ? 'Edit User Credentials' : 'Add System Admin'}</h3>
+              <p className="text-xs text-slate-400">Configure dashboard control and privileges.</p>
+            </div>
+
+            <form onSubmit={handleCreateOrUpdateUser} className="space-y-4">
+              {userError && (
+                <div className="rounded-lg border border-red-900 bg-red-950/40 p-3 text-xs text-red-400 font-semibold leading-relaxed">
+                  {userError}
+                </div>
+              )}
+
+              {!editingUser && (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Display Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={userForm.displayName}
+                      onChange={(e) => setUserForm({ ...userForm, displayName: e.target.value })}
+                      placeholder="e.g. Arju Rana"
+                      className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={userForm.email}
+                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                      placeholder="e.g. arju@example.com"
+                      className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Password</label>
+                    <input
+                      type="password"
+                      required
+                      value={userForm.password}
+                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                      placeholder="••••••••"
+                      className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Workspace Role</label>
+                <select
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent"
+                >
+                  <option value="ADMIN">ADMIN</option>
+                  {userRole === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">SUPER_ADMIN</option>}
+                </select>
+              </div>
+
+              {editingUser && (
+                <div className="space-y-1.5">
+                  <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Account Status</label>
+                  <select
+                    value={userForm.status}
+                    onChange={(e) => setUserForm({ ...userForm, status: e.target.value })}
+                    className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-slate-800/80 flex gap-4 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsUserModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-accent hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-accent/20 cursor-pointer"
+                >
+                  {editingUser ? 'Save Status' : 'Create User'}
+                </button>
               </div>
             </form>
           </div>
