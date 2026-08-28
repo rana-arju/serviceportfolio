@@ -1672,41 +1672,14 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Body HTML Render (Iframe for styled isolation) */}
-                  <div className="flex-grow bg-slate-950/20 p-2 overflow-hidden flex">
+                  {/* Body HTML Render — exact email template as received */}
+                  <div className="flex-grow overflow-auto bg-slate-200 rounded-b-xl">
                     <iframe
-                      srcDoc={`
-                        <html>
-                          <head>
-                            <style>
-                              body {
-                                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                                font-size: 14px;
-                                line-height: 1.5;
-                                color: #cbd5e1;
-                                background-color: #0c101a;
-                                padding: 20px;
-                                margin: 0;
-                                word-wrap: break-word;
-                              }
-                              a { color: #6366f1; text-decoration: none; }
-                              a:hover { text-decoration: underline; }
-                              hr { border: 0; border-top: 1px solid #1e293b; margin: 20px 0; }
-                              blockquote {
-                                border-left: 3px solid #4f46e5;
-                                margin: 10px 0;
-                                padding-left: 15px;
-                                color: #94a3b8;
-                              }
-                            </style>
-                          </head>
-                          <body>
-                            ${selectedMailDetail.html}
-                          </body>
-                        </html>
-                      `}
-                      className="w-full h-full border-0 rounded-xl bg-[#0c101a]"
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><style>body{margin:0;padding:0;background:#f1f5f9;}*{box-sizing:border-box;}</style></head><body>${selectedMailDetail.html}</body></html>`}
+                      className="w-full border-0"
+                      style={{ minHeight: '100%', height: '600px' }}
                       title="Email Reader"
+                      sandbox="allow-same-origin"
                     />
                   </div>
                 </div>
