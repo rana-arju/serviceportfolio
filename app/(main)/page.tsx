@@ -21,7 +21,7 @@ export default function Home() {
       <WhatWeDo />
       <HowWeThink />
       <Solutions />
-      <TeamSection />
+      {/* <TeamSection /> */}
       <WhyReplyTentra />
       <CapabilitiesMap />
       <Testimonials />

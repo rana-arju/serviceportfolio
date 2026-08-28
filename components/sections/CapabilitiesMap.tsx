@@ -87,7 +87,7 @@ export function CapabilitiesMap() {
           </div>
 
           <div className="mt-10 text-center">
-            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-accent bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full">
+            <span className="inline-block text-[10px] sm:text-xs font-semibold uppercase tracking-wider sm:tracking-widest text-accent bg-accent/10 border border-accent/20 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full max-w-full">
               Engineered Pipeline Workflow Flowing Live &rarr;
             </span>
           </div>

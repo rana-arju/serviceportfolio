@@ -2,6 +2,7 @@ import React from 'react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import Link from 'next/link';
 import { TeamSection } from '@/components/sections/TeamSection';
+import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function TeamPage() {
+  redirect('/');
   return (
     <div className="relative pt-12 sm:pt-16 pb-16 sm:pb-24 bg-background overflow-hidden min-h-screen">
       <AnimatedBackground />

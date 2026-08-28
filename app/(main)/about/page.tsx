@@ -1,7 +1,7 @@
 import React from 'react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
-import { ShieldCheck, Heart, Users, Target } from 'lucide-react';
+import { ShieldCheck, Heart, Users, Target, Compass, Globe } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default function AboutPage() {
     <div className="relative py-16 sm:py-24 bg-background overflow-hidden min-h-screen">
       <AnimatedBackground />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
-        
+
         {/* Page Hero */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wider text-accent uppercase bg-accent/10 border border-accent/20">
@@ -61,6 +61,49 @@ export default function AboutPage() {
           <p className="text-muted-foreground text-base leading-relaxed">
             Today, ReplyTentra designs custom-engineered automation environments utilizing n8n, Zapier, GoHighLevel, and standalone Next.js applications to serve as the unified backbones of mid-market companies.
           </p>
+        </div>
+
+        {/* Mission & Vision Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+          {/* Mission Card */}
+          <div className="relative group overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-slate-50/50 dark:to-slate-900/10 p-6 sm:p-8 md:p-10 shadow-md hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-accent to-indigo-500 opacity-80" />
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
+              <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent flex-shrink-0">
+                <Compass className="w-6 h-6" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-foreground">Our Mission</h3>
+                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                  To empower national and global organizations by transforming operational friction into high-performance, automated ecosystems. We build secure, compliant, and scalable system architectures that eliminate manual overhead, allowing teams to unlock peak productivity.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <span className="text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-md bg-accent/5 text-accent border border-accent/10">Global Delivery</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-500/5 text-indigo-500 border border-indigo-500/10 dark:text-indigo-400">Scale Intent</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Vision Card */}
+          <div className="relative group overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-slate-50/50 dark:to-slate-900/10 p-6 sm:p-8 md:p-10 shadow-md hover:shadow-xl transition-all duration-300">
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 to-accent opacity-80" />
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400 flex-shrink-0">
+                <Globe className="w-6 h-6" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-foreground">Our Vision</h3>
+                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                  To pioneer the future of automated enterprise, serving as the trusted engineering backbone for brands scaling worldwide. We envision a digital landscape where system integrations are flawless, artificial intelligence works contextually, and technology adapts seamlessly to operational strategies.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <span className="text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-500/5 text-indigo-500 border border-indigo-500/10 dark:text-indigo-400">Zero Maintenance</span>
+                  <span className="text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-md bg-accent/5 text-accent border border-accent/10">Enterprise Standards</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Core Principles */}

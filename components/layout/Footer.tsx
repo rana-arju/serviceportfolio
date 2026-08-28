@@ -39,7 +39,7 @@ const SERVICES = [
 
 const COMPANY = [
   { name: 'About Us', href: '/about' },
-  { name: 'Our Team', href: '/team' },
+  // { name: 'Our Team', href: '/team' },
   { name: 'Featured Work', href: '/work' },
   { name: 'Contact', href: '/contact' },
   { name: 'Book a Meeting', href: '/book-a-meeting' },

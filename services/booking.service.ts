@@ -9,23 +9,23 @@ export interface BookingSubmission {
   details?: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6007/api/v1';
+
 export class BookingService {
   static async createBooking(data: BookingSubmission): Promise<{ success: boolean; message: string }> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const response = await fetch(`${API_BASE_URL}/booking`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-    // Storing locally in simulated database storage
-    try {
-      const bookings = JSON.parse(localStorage.getItem('replytentra_bookings') || '[]');
-      bookings.push({ ...data, id: Date.now(), created: new Date().toISOString() });
-      localStorage.setItem('replytentra_bookings', JSON.stringify(bookings));
-    } catch (e) {
-      console.warn('LocalStorage unavailable for simulating database writes.', e);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to request meeting booking');
     }
 
-    return {
-      success: true,
-      message: 'Booking request saved successfully.',
-    };
+    return response.json();
   }
 }

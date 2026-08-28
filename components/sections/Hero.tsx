@@ -30,7 +30,7 @@ const itemVariants: Variants = {
 
 export function Hero() {
   return (
-    <section className="relative w-full pt-4 pb-10 sm:pt-10 sm:pb-24 md:pt-12 md:pb-28 overflow-hidden bg-background">
+    <section className="relative w-full pt-20 pb-10 sm:pt-24 sm:pb-24 md:pt-32 md:pb-28 overflow-hidden bg-background">
       <AnimatedBackground />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 lg:gap-8 items-center">

@@ -8,23 +8,23 @@ export interface ContactSubmission {
   details: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:6007/api/v1';
+
 export class ContactService {
   static async submitMessage(data: ContactSubmission): Promise<{ success: boolean; message: string }> {
-    // Simulate API network latency
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    const response = await fetch(`${API_BASE_URL}/contact`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-    // Save submission locally in simulated localStorage
-    try {
-      const submissions = JSON.parse(localStorage.getItem('replytentra_contact_submissions') || '[]');
-      submissions.push({ ...data, id: Date.now(), date: new Date().toISOString() });
-      localStorage.setItem('replytentra_contact_submissions', JSON.stringify(submissions));
-    } catch (e) {
-      console.warn('LocalStorage unavailable for simulating database writes.', e);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to submit contact message');
     }
 
-    return {
-      success: true,
-      message: 'Message delivered to ReplyTentra database simulated records.',
-    };
+    return response.json();
   }
 }

@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { name: 'Services', href: '/services', desc: 'Expert AI workflows, CRM, and SaaS' },
   { name: 'Work', href: '/work', desc: 'Check our premium client projects' },
   { name: 'About', href: '/about', desc: 'Who we are and our mission' },
-  { name: 'Team', href: '/team', desc: 'Meet our automation engineers' },
+  // { name: 'Team', href: '/team', desc: 'Meet our automation engineers' },
   { name: 'Contact', href: '/contact', desc: 'Get in touch for a custom plan' },
 ];
 
