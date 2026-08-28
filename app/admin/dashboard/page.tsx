@@ -273,18 +273,19 @@ export default function AdminDashboard() {
         }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(responseData.message || 'Login failed');
       }
 
-      const role = data.user.role;
+      const loginResult = responseData.data;
+      const role = loginResult.user.role;
       const session = {
-        username: data.user.displayName || data.user.username,
-        email: data.user.email,
+        username: loginResult.user.displayName || loginResult.user.username,
+        email: loginResult.user.email,
         role: role,
-        accessToken: data.accessToken,
+        accessToken: loginResult.accessToken,
         time: Date.now(),
       };
       localStorage.setItem(AUTH_KEY, JSON.stringify(session));
@@ -293,7 +294,7 @@ export default function AdminDashboard() {
       setUserRole(role);
       setAuthError('');
 
-      loadRealBackendData(data.accessToken);
+      loadRealBackendData(loginResult.accessToken);
     } catch (err: any) {
       setAuthError(err.message || 'Invalid email or password.');
     }
