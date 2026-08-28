@@ -154,13 +154,29 @@ export default function AdminDashboard() {
   const [authError, setAuthError] = useState('');
 
   // Active section
-  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'bookings' | 'works' | 'users' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'contacts' | 'bookings' | 'works' | 'users' | 'settings' | 'inbox'>('overview');
 
   // Loaded DB data state
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [bookings, setBookings] = useState<BookingSubmission[]>([]);
   const [works, setWorks] = useState<RecentWork[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+
+  // Email Client states
+  const [emailsList, setEmailsList] = useState<any[]>([]);
+  const [selectedMail, setSelectedMail] = useState<any | null>(null);
+  const [selectedMailDetail, setSelectedMailDetail] = useState<any | null>(null);
+  const [mailBodyLoading, setMailBodyLoading] = useState(false);
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [composeForm, setComposeForm] = useState({
+    to: '',
+    subject: '',
+    templateStyle: 'professional',
+    customContent: ''
+  });
+  const [mailSending, setMailSending] = useState(false);
+  const [mailSuccess, setMailSuccess] = useState('');
+  const [mailError, setMailError] = useState('');
 
   // Detailed Modal views
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null);
@@ -222,7 +238,7 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
       setUserRole(parsed.role);
       setUsername(parsed.username);
-      
+
       if (parsed.accessToken) {
         loadRealBackendData(parsed.accessToken);
       } else {
@@ -270,6 +286,54 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadEmails = async () => {
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/mail/inbox`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsed.accessToken}`,
+        },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setEmailsList(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load emails:', err);
+    }
+  };
+
+  const loadEmailDetail = async (uid: number) => {
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    setMailBodyLoading(true);
+    setSelectedMailDetail(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/mail/message/${uid}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsed.accessToken}`,
+        },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setSelectedMailDetail(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load email detail:', err);
+    } finally {
+      setMailBodyLoading(false);
+    }
+  };
+
   const loadRealBackendData = async (token: string) => {
     try {
       const headers = {
@@ -291,12 +355,13 @@ export default function AdminDashboard() {
         setBookings(bookingsData.data);
       }
 
-      // Load users list if user role is ADMIN or SUPER_ADMIN
+      // Load users and emails list if user role is ADMIN or SUPER_ADMIN
       const session = localStorage.getItem(AUTH_KEY);
       if (session) {
         const parsed = JSON.parse(session);
         if (parsed.role === 'SUPER_ADMIN' || parsed.role === 'ADMIN') {
           loadUsers();
+          loadEmails();
         }
       }
 
@@ -482,6 +547,124 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSendCustomMail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMailSuccess('');
+    setMailError('');
+    setMailSending(true);
+
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const parsed = JSON.parse(session);
+    if (!parsed.accessToken) return;
+
+    // Generate HTML template based on style
+    let htmlContent = '';
+    const logoUrl = 'https://replytentra.com/reply-tentra-logo.webp';
+
+    if (composeForm.templateStyle === 'professional') {
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 40px 0;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              <div style="background-color: #0f172a; padding: 30px; text-align: center;">
+                <img src="${logoUrl}" alt="ReplyTentra Logo" style="max-width: 140px;" />
+              </div>
+              <div style="padding: 30px; line-height: 1.6; font-size: 15px;">
+                <p style="margin-top: 0; color: #475569;">Hello,</p>
+                <div style="color: #1e293b; margin-bottom: 25px;">
+                  ${composeForm.customContent.replace(/\n/g, '<br>')}
+                </div>
+                <p style="margin-bottom: 0; color: #64748b; font-size: 14px;">Best Regards,<br><strong>ReplyTentra Workspace Support</strong></p>
+              </div>
+              <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                ReplyTentra Systems Engineering &copy; ${new Date().getFullYear()}
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+    } else if (composeForm.templateStyle === 'promotion') {
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 40px 0;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+              <div style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding: 45px 30px; text-align: center; color: #ffffff;">
+                <img src="${logoUrl}" alt="ReplyTentra Logo" style="max-width: 140px; margin-bottom: 15px;" />
+                <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Exclusive Operations Insight</h1>
+              </div>
+              <div style="padding: 35px; line-height: 1.6; font-size: 15px;">
+                <h2 style="font-size: 18px; color: #0f172a; margin-top: 0;">Unlock Automation Efficiency</h2>
+                <div style="color: #475569; margin-bottom: 25px;">
+                  ${composeForm.customContent.replace(/\n/g, '<br>')}
+                </div>
+                <div style="text-align: center; margin: 30px 0 15px 0;">
+                  <a href="https://replytentra.com" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: bold; font-size: 14px;">Visit ReplyTentra Portal</a>
+                </div>
+              </div>
+              <div style="background-color: #f8fafc; padding: 25px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                Designed & Powered by ReplyTentra Team
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+    } else {
+      // Thank You Template
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <body style="font-family: Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 40px 0;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              <div style="background-color: #0f172a; padding: 30px; text-align: center;">
+                <img src="${logoUrl}" alt="ReplyTentra Logo" style="max-width: 140px;" />
+              </div>
+              <div style="padding: 35px; line-height: 1.6; font-size: 15px; text-align: center;">
+                <div style="width: 56px; height: 56px; line-height: 56px; background-color: #ecfdf5; color: #10b981; border-radius: 50%; display: inline-block; font-size: 28px; margin-bottom: 20px;">✓</div>
+                <h2 style="font-size: 20px; color: #0f172a; margin-top: 0; margin-bottom: 10px;">Thank You!</h2>
+                <div style="color: #475569; margin-bottom: 25px; text-align: left;">
+                  ${composeForm.customContent.replace(/\n/g, '<br>')}
+                </div>
+              </div>
+              <div style="background-color: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
+                ReplyTentra Systems Workspace &copy; ${new Date().getFullYear()}
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/mail/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${parsed.accessToken}`,
+        },
+        body: JSON.stringify({
+          to: composeForm.to,
+          subject: composeForm.subject,
+          html: htmlContent
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to send email');
+
+      setMailSuccess('Email sent successfully!');
+      setIsComposeOpen(false);
+      setComposeForm({ to: '', subject: '', templateStyle: 'professional', customContent: '' });
+      loadEmails();
+    } catch (err: any) {
+      setMailError(err.message || 'Failed to send email.');
+    } finally {
+      setMailSending(false);
+    }
+  };
+
   // CRUD actions for Recent Work
   const openWorkCreate = () => {
     setEditingWork(null);
@@ -614,7 +797,7 @@ export default function AdminDashboard() {
     return (
       <div className="relative flex min-h-screen items-center justify-center bg-[#030712] px-4 py-12 text-slate-100 overflow-hidden">
         <AnimatedBackground />
-        
+
         <div className="relative z-10 w-full max-w-md space-y-8 rounded-2xl border border-slate-800 bg-[#0b0f19]/80 p-8 shadow-2xl backdrop-blur-xl animate-fade-in">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-accent to-purple-400 bg-clip-text text-transparent">
@@ -632,7 +815,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-             <div className="space-y-1">
+            <div className="space-y-1">
               <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Email Address</label>
               <input
                 type="email"
@@ -710,9 +893,8 @@ export default function AdminDashboard() {
 
       {/* Sidebar Panel */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0b0f19]/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl transition-transform duration-300 md:relative md:translate-x-0 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0b0f19]/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl transition-transform duration-300 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          }`}
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
@@ -740,11 +922,10 @@ export default function AdminDashboard() {
                 setActiveTab('overview');
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'overview'
-                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'overview'
+                ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
             >
               <LayoutDashboard className="w-4 h-4" />
               <span>Overview</span>
@@ -755,11 +936,10 @@ export default function AdminDashboard() {
                 setActiveTab('contacts');
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'contacts'
-                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'contacts'
+                ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
             >
               <Mail className="w-4 h-4" />
               <span>Contacts Form</span>
@@ -775,11 +955,10 @@ export default function AdminDashboard() {
                 setActiveTab('bookings');
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'bookings'
-                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'bookings'
+                ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
             >
               <Calendar className="w-4 h-4" />
               <span>Meeting Bookings</span>
@@ -795,11 +974,10 @@ export default function AdminDashboard() {
                 setActiveTab('works');
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'works'
-                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'works'
+                ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
             >
               <Briefcase className="w-4 h-4" />
               <span>Recent Works</span>
@@ -811,11 +989,10 @@ export default function AdminDashboard() {
                   setActiveTab('users');
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === 'users'
-                    ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'users'
+                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                  }`}
               >
                 <UserCheck className="w-4 h-4" />
                 <span>Manage Admins</span>
@@ -827,16 +1004,31 @@ export default function AdminDashboard() {
               </button>
             )}
 
+            {(userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') && (
+              <button
+                onClick={() => {
+                  setActiveTab('inbox');
+                  setIsSidebarOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'inbox'
+                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                  }`}
+              >
+                <Mail className="w-4 h-4" />
+                <span>Email Client</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setActiveTab('settings');
                 setIsSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                activeTab === 'settings'
-                  ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${activeTab === 'settings'
+                ? 'bg-accent/15 text-accent border-l-4 border-accent pl-3'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                }`}
             >
               <Edit2 className="w-4 h-4" />
               <span>Settings</span>
@@ -869,7 +1061,7 @@ export default function AdminDashboard() {
 
       {/* Main Panel Content */}
       <main className="relative z-10 flex-grow p-6 md:p-10 space-y-8 overflow-y-auto max-h-screen">
-        
+
         {/* Top greeting bar */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/60 pb-6">
           <div>
@@ -1207,7 +1399,7 @@ export default function AdminDashboard() {
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>{userRole === 'MODERATOR' ? 'View Schema' : 'Edit'}</span>
                     </button>
-                    
+
                     {userRole !== 'MODERATOR' && (
                       <button
                         onClick={() => deleteWork(work.id)}
@@ -1255,11 +1447,10 @@ export default function AdminDashboard() {
                         <h4 className="font-bold text-base text-white truncate">{user.displayName}</h4>
                         <span className="text-xs text-slate-400 block truncate">{user.email}</span>
                       </div>
-                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase ${
-                        user.role === 'SUPER_ADMIN'
-                          ? 'bg-accent/10 border-accent/30 text-accent'
-                          : 'bg-purple-500/10 border-purple-500/30 text-purple-400'
-                      }`}>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase ${user.role === 'SUPER_ADMIN'
+                        ? 'bg-accent/10 border-accent/30 text-accent'
+                        : 'bg-purple-500/10 border-purple-500/30 text-purple-400'
+                        }`}>
                         {user.role}
                       </span>
                     </div>
@@ -1374,6 +1565,157 @@ export default function AdminDashboard() {
                 Update Password
               </button>
             </form>
+          </div>
+        )}
+
+        {/* 7. EMAIL INBOX CLIENT */}
+        {activeTab === 'inbox' && (userRole === 'SUPER_ADMIN' || userRole === 'ADMIN') && (
+          <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)] animate-fade-in">
+            {/* Email List Left Panel */}
+            <div className="w-full lg:w-96 rounded-2xl border border-slate-800 bg-[#0b0f19]/80 shadow-md flex flex-col overflow-hidden shrink-0">
+              <div className="p-4 border-b border-slate-800 bg-slate-900/40 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-sm text-white">Official Inbox</h3>
+                  <p className="text-[10px] text-slate-400">info@replytentra.com</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={loadEmails}
+                    className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-xs font-bold transition-all hover:bg-slate-800 cursor-pointer"
+                    title="Refresh Inbox"
+                  >
+                    Refresh
+                  </button>
+                  <button
+                    onClick={() => {
+                      setComposeForm({ to: '', subject: '', templateStyle: 'professional', customContent: '' });
+                      setMailSuccess('');
+                      setMailError('');
+                      setIsComposeOpen(true);
+                    }}
+                    className="p-2 rounded-lg bg-accent text-white text-xs font-bold hover:bg-indigo-500 transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Compose</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40">
+                {emailsList.map((mail) => (
+                  <div
+                    key={mail.uid}
+                    onClick={() => {
+                      setSelectedMail(mail);
+                      loadEmailDetail(mail.uid);
+                    }}
+                    className={`p-4 hover:bg-slate-900/30 transition-all cursor-pointer text-left space-y-1.5 ${selectedMail?.uid === mail.uid ? 'bg-accent/10 border-l-4 border-accent' : ''
+                      }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs font-bold text-indigo-400 truncate max-w-[150px]">{mail.from.split('<')[0] || mail.from}</span>
+                      <span className="text-[9px] text-slate-500 whitespace-nowrap font-medium">
+                        {new Date(mail.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-200 line-clamp-1">{mail.subject}</h4>
+                  </div>
+                ))}
+                {emailsList.length === 0 && (
+                  <div className="p-8 text-center text-slate-500 italic text-xs">
+                    No emails found in inbox.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Email Body Right Panel */}
+            <div className="flex-1 rounded-2xl border border-slate-800 bg-[#0b0f19]/80 shadow-md flex flex-col overflow-hidden relative">
+              {mailBodyLoading ? (
+                <div className="flex-grow flex items-center justify-center text-slate-400 text-xs">
+                  Loading email contents...
+                </div>
+              ) : selectedMailDetail ? (
+                <div className="flex-grow flex flex-col overflow-hidden">
+                  {/* Header */}
+                  <div className="p-6 border-b border-slate-800/80 bg-slate-900/10 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <h3 className="font-extrabold text-base text-white">{selectedMailDetail.subject}</h3>
+                        <p className="text-xs text-slate-400">
+                          From: <span className="font-semibold text-slate-200">{selectedMailDetail.from}</span>
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                          To: {selectedMailDetail.to} • {new Date(selectedMailDetail.date).toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const senderEmail = selectedMailDetail.from.includes('<')
+                            ? selectedMailDetail.from.split('<')[1].replace('>', '').trim()
+                            : selectedMailDetail.from.trim();
+                          setComposeForm({
+                            to: senderEmail,
+                            subject: `Re: ${selectedMailDetail.subject}`,
+                            templateStyle: 'professional',
+                            customContent: `\n\nOn ${new Date(selectedMailDetail.date).toLocaleDateString()}, ${senderEmail} wrote:\n> `
+                          });
+                          setMailSuccess('');
+                          setMailError('');
+                          setIsComposeOpen(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-all hover:bg-slate-800 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer self-start"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Reply</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Body HTML Render (Iframe for styled isolation) */}
+                  <div className="flex-grow bg-slate-950/20 p-2 overflow-hidden flex">
+                    <iframe
+                      srcDoc={`
+                        <html>
+                          <head>
+                            <style>
+                              body {
+                                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                                font-size: 14px;
+                                line-height: 1.5;
+                                color: #cbd5e1;
+                                background-color: #0c101a;
+                                padding: 20px;
+                                margin: 0;
+                                word-wrap: break-word;
+                              }
+                              a { color: #6366f1; text-decoration: none; }
+                              a:hover { text-decoration: underline; }
+                              hr { border: 0; border-top: 1px solid #1e293b; margin: 20px 0; }
+                              blockquote {
+                                border-left: 3px solid #4f46e5;
+                                margin: 10px 0;
+                                padding-left: 15px;
+                                color: #94a3b8;
+                              }
+                            </style>
+                          </head>
+                          <body>
+                            ${selectedMailDetail.html}
+                          </body>
+                        </html>
+                      `}
+                      className="w-full h-full border-0 rounded-xl bg-[#0c101a]"
+                      title="Email Reader"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-grow flex items-center justify-center text-slate-500 text-xs italic">
+                  Select a message from the inbox list to read it.
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
@@ -1840,7 +2182,7 @@ export default function AdminDashboard() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
-                      
+
                       <div className="grid grid-cols-2 gap-2">
                         <input
                           type="text"
@@ -2001,6 +2343,105 @@ export default function AdminDashboard() {
                   className="px-5 py-2 rounded-xl bg-accent hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-accent/20 cursor-pointer"
                 >
                   {editingUser ? 'Save Status' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* COMPOSE EMAIL MODAL */}
+      {isComposeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl bg-[#0b0f19] border border-slate-800 rounded-2xl shadow-2xl p-6 md:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto text-left">
+            <button
+              onClick={() => setIsComposeOpen(false)}
+              className="absolute top-6 right-6 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-accent uppercase tracking-widest block">Communication Center</span>
+              <h3 className="text-xl font-bold text-white">Compose Mail (info@replytentra.com)</h3>
+              <p className="text-xs text-slate-400">Send custom messages with HTML business templates</p>
+            </div>
+
+            <form onSubmit={handleSendCustomMail} className="space-y-4">
+              {mailSuccess && (
+                <div className="rounded-lg border border-emerald-950 bg-emerald-950/40 p-3 text-xs text-emerald-400 font-semibold">
+                  {mailSuccess}
+                </div>
+              )}
+              {mailError && (
+                <div className="rounded-lg border border-red-950 bg-red-950/40 p-3 text-xs text-red-400 font-semibold">
+                  {mailError}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Recipient Email</label>
+                <input
+                  type="email"
+                  required
+                  value={composeForm.to}
+                  onChange={(e) => setComposeForm({ ...composeForm, to: e.target.value })}
+                  placeholder="customer@example.com"
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Subject Line</label>
+                <input
+                  type="text"
+                  required
+                  value={composeForm.subject}
+                  onChange={(e) => setComposeForm({ ...composeForm, subject: e.target.value })}
+                  placeholder="e.g. ReplyTentra Strategy Session Confirmation"
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">HTML Template Theme</label>
+                <select
+                  value={composeForm.templateStyle}
+                  onChange={(e) => setComposeForm({ ...composeForm, templateStyle: e.target.value })}
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-accent"
+                >
+                  <option value="professional">Professional Business (ReplyTentra Styled)</option>
+                  <option value="promotion">Special Operations / Automation Offer</option>
+                  <option value="thank_you">Friendly Acknowledgement / Thank You</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-xs text-slate-400 uppercase tracking-wider">Message Content</label>
+                <textarea
+                  required
+                  rows={8}
+                  value={composeForm.customContent}
+                  onChange={(e) => setComposeForm({ ...composeForm, customContent: e.target.value })}
+                  placeholder="Write your email body copy here..."
+                  className="w-full rounded-lg border border-slate-800 bg-[#080b11] px-3 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-accent font-sans"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-800/80 flex gap-4 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsComposeOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={mailSending}
+                  className="px-5 py-2 rounded-xl bg-accent hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-accent/20 cursor-pointer disabled:opacity-50"
+                >
+                  {mailSending ? 'Sending...' : 'Send HTML Email'}
                 </button>
               </div>
             </form>
