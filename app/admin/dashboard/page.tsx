@@ -372,7 +372,45 @@ export default function AdminDashboard() {
         const worksRes = await fetch(`${API_BASE_URL}/works`, { cache: 'no-store' });
         if (worksRes.ok) {
           const json = await worksRes.json();
-          setWorks(json.data || []);
+          let dbWorks = json.data || [];
+          
+          // Auto-migrate local works if DB is empty
+          if (dbWorks.length === 0) {
+            const localWorksStr = localStorage.getItem(WORKS_KEY);
+            if (localWorksStr) {
+              const localWorks = JSON.parse(localWorksStr);
+              // Only migrate if it has items that are not the default 3
+              if (localWorks.length > 0 && localWorks[0].id) {
+                console.log('Migrating local works to database...');
+                // Set temporarily to avoid empty flash
+                setWorks(localWorks);
+                
+                // Upload in background
+                for (const work of localWorks) {
+                  const { id, ...workPayload } = work;
+                  try {
+                    await fetch(`${API_BASE_URL}/works`, {
+                      method: 'POST',
+                      headers,
+                      body: JSON.stringify(workPayload),
+                    });
+                  } catch (err) {
+                    console.error('Failed to migrate work:', err);
+                  }
+                }
+                
+                // Re-fetch from DB to get real IDs
+                const refreshRes = await fetch(`${API_BASE_URL}/works`, { cache: 'no-store' });
+                if (refreshRes.ok) {
+                  const refreshJson = await refreshRes.json();
+                  dbWorks = refreshJson.data || [];
+                }
+                // Clear local storage migration flag/data if desired (optional)
+              }
+            }
+          }
+          
+          setWorks(dbWorks.length > 0 ? dbWorks : DEFAULT_WORKS);
         }
       } catch (e) {
         console.error('Failed to load works', e);
