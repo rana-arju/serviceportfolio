@@ -82,9 +82,12 @@ export function constructMetadata({
       site: '@replytentra',
     },
     icons: {
-      icon: '/favicon.png',
-      shortcut: '/favicon.png',
-      apple: '/favicon.png',
+      icon: [
+        { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
+        { url: '/icon.png',    sizes: 'any',   type: 'image/png' },
+      ],
+      shortcut: '/favicon.ico',
+      apple:    '/icon.png',
     },
     robots: {
       index: !noIndex,

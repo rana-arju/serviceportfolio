@@ -16,7 +16,13 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
-export const metadata: Metadata = constructMetadata();
+export const metadata: Metadata = {
+  ...constructMetadata(),
+  title: {
+    template: '%s | ReplyTentra',
+    default: 'ReplyTentra — Premium AI, Automation & Software Engineering Agency',
+  },
+};
 
 export default function RootLayout({
   children,
