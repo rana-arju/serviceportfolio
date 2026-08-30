@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
@@ -27,7 +27,12 @@ export function ClientBookMeetingPage() {
   const [meetingDuration, setMeetingDuration] = useState<'15' | '30'>('30');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const { theme } = useTheme();
+
+  useEffect(() => {
+    setIframeLoaded(false);
+  }, [meetingDuration]);
 
   const {
     register,
@@ -127,14 +132,50 @@ export function ClientBookMeetingPage() {
                 </button>
               </div>
             </div>
-            {/* Cal.com Embed */}
-            <iframe
-              src={`https://cal.com/replytentra/${meetingDuration}min?embed=true&theme=${theme}`}
-              style={{ width: '100%', height: '100%', minHeight: '650px', border: '0' }}
-              className="w-full h-full rounded-xl bg-transparent transition-opacity duration-300"
-              allowFullScreen
-              title={`Cal.com Booking ${meetingDuration}min`}
-            />
+            {/* Cal.com Embed Container */}
+            <div className="relative w-full min-h-[650px] rounded-xl overflow-hidden">
+              {/* Skeleton Loader */}
+              {!iframeLoaded && (
+                <div className="absolute inset-0 z-10 bg-card border border-border rounded-xl flex flex-col sm:flex-row p-8 gap-12 animate-pulse">
+                   {/* Left sidebar skeleton */}
+                   <div className="w-full sm:w-1/3 space-y-6">
+                     <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800" />
+                     <div className="space-y-3">
+                       <div className="w-32 h-4 rounded bg-slate-200 dark:bg-slate-800" />
+                       <div className="w-48 h-8 rounded bg-slate-200 dark:bg-slate-800" />
+                     </div>
+                     <div className="space-y-3 pt-4">
+                       <div className="w-24 h-4 rounded bg-slate-200 dark:bg-slate-800" />
+                       <div className="w-32 h-4 rounded bg-slate-200 dark:bg-slate-800" />
+                     </div>
+                   </div>
+                   {/* Right calendar skeleton */}
+                   <div className="flex-1 space-y-8">
+                     <div className="flex justify-between items-center">
+                       <div className="w-40 h-8 rounded bg-slate-200 dark:bg-slate-800" />
+                       <div className="flex gap-2">
+                         <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+                         <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+                       </div>
+                     </div>
+                     <div className="grid grid-cols-7 gap-4 sm:gap-6">
+                       {Array.from({length: 35}).map((_, i) => (
+                         <div key={i} className="aspect-square rounded-full bg-slate-100 dark:bg-slate-800/50" />
+                       ))}
+                     </div>
+                   </div>
+                </div>
+              )}
+              
+              <iframe
+                src={`https://cal.com/replytentra/${meetingDuration}min?embed=true&theme=${theme}`}
+                style={{ width: '100%', height: '100%', minHeight: '650px', border: '0' }}
+                className={`w-full h-full bg-transparent transition-opacity duration-500 relative z-20 ${iframeLoaded ? 'opacity-100' : 'opacity-0'}`}
+                allowFullScreen
+                onLoad={() => setIframeLoaded(true)}
+                title={`Cal.com Booking ${meetingDuration}min`}
+              />
+            </div>
           </div>
         ) : (
           /* Success Modal or Form */
