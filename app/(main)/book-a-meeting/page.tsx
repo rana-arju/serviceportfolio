@@ -1,12 +1,22 @@
 import React from 'react';
-import type { Metadata } from 'next';
+import { constructMetadata } from '@/lib/seo';
 import { ClientBookMeetingPage } from './ClientBookMeetingPage';
 
-export const metadata: Metadata = {
-  title: 'Book a Strategy Call | ReplyTentra - CRM & AI Automation Consultation',
-  description: 'Book your 15-minute discovery or 30-minute operations strategy call. Let our engineers build custom workflows that help scale your business operations.',
-  keywords: ['Book a Call', 'Cal.com Booking', 'CRM Consultation', 'AI Automation strategy call'],
-};
+export const metadata = constructMetadata({
+  title: 'Book a Free Strategy Call | ReplyTentra — AI Automation & CRM Consultation',
+  description:
+    'Schedule a free 15-minute discovery or 30-minute strategy session with ReplyTentra engineers. Talk about your automation challenges, CRM goals, or custom software requirements.',
+  canonical: '/book-a-meeting',
+  keywords: [
+    'Book Strategy Call ReplyTentra',
+    'Free Automation Consultation',
+    'AI Automation Discovery Call',
+    'GoHighLevel Consultation',
+    'n8n Strategy Session',
+    'CRM Consultation Call',
+    'Hire Automation Agency',
+  ],
+});
 
 export default function BookMeetingPage() {
   return <ClientBookMeetingPage />;

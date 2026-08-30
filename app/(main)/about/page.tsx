@@ -3,12 +3,24 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { ShieldCheck, Heart, Users, Target, Compass, Globe } from 'lucide-react';
 import type { Metadata } from 'next';
+import { constructMetadata } from '@/lib/seo';
+import { JsonLd, getBreadcrumbSchema } from '@/components/seo/JsonLd';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = constructMetadata({
   title: 'About ReplyTentra | Systems Engineering for Business Scale',
-  description: 'ReplyTentra was built to design custom-engineered automation environments utilizing n8n, Zapier, GoHighLevel, and standalone applications to unify workflows.',
-  keywords: ['About ReplyTentra', 'Systems Engineering', 'Workflows automation', 'ReplyTentra Team'],
-};
+  description:
+    'ReplyTentra designs custom-engineered automation environments using n8n, Zapier, GoHighLevel, and standalone SaaS applications to unify workflows and eliminate operational friction.',
+  canonical: '/about',
+  keywords: [
+    'About ReplyTentra',
+    'Systems Engineering Agency',
+    'Workflow Automation Company',
+    'n8n Agency',
+    'GoHighLevel Agency',
+    'AI Automation Team',
+    'ReplyTentra Team',
+  ],
+});
 
 const PRINCIPLES = [
   {
@@ -36,6 +48,10 @@ const PRINCIPLES = [
 export default function AboutPage() {
   return (
     <div className="relative py-16 sm:py-24 bg-background overflow-hidden min-h-screen">
+      <JsonLd type="BreadcrumbList" data={getBreadcrumbSchema([
+        { name: 'Home',  url: 'https://replytentra.com/' },
+        { name: 'About', url: 'https://replytentra.com/about' },
+      ])} />
       <AnimatedBackground />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
 

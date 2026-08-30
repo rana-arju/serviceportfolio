@@ -3,13 +3,25 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { Bot, Layers, Code } from 'lucide-react';
 import Link from 'next/link';
-import type { Metadata } from 'next';
+import { constructMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Our Services | ReplyTentra - Systems Engineering & Custom Software',
-  description: 'We design, build, and support business pipelines, CRM integrations, and full-stack SaaS applications utilizing n8n, GHL, and React systems.',
-  keywords: ['AI Automation', 'n8n Workflow', 'GoHighLevel Setup', 'CRM Customization', 'SaaS Development'],
-};
+export const metadata = constructMetadata({
+  title: 'Our Services | ReplyTentra — AI Automation, n8n, GoHighLevel & SaaS Development',
+  description:
+    'We design, build, and support business pipelines, CRM integrations, and full-stack SaaS applications using n8n, GoHighLevel, Zapier, and React/Next.js systems. Get a free audit.',
+  canonical: '/services',
+  keywords: [
+    'AI Automation Services',
+    'n8n Workflow Automation',
+    'GoHighLevel CRM Setup',
+    'CRM Customization Agency',
+    'SaaS Development Agency',
+    'Business Process Automation',
+    'Zapier Automation Agency',
+    'Custom Software Development',
+    'AI Chatbot Development',
+  ],
+});
 
 const SERVICE_SECTIONS = [
   {

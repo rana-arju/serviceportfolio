@@ -1,13 +1,23 @@
 import React from 'react';
 import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import { ProjectCard, Project } from '@/components/shared/ProjectCard';
-import type { Metadata } from 'next';
+import { constructMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Our Featured Work & Case Studies | ReplyTentra',
-  description: 'Read detailed breakdowns of custom AI automations and SaaS platform developments shipped by ReplyTentra.',
-  keywords: ['ReplyTentra Work', 'AI automation projects', 'SaaS project details'],
-};
+export const metadata = constructMetadata({
+  title: 'Our Work & Case Studies | ReplyTentra — AI Automation & SaaS Projects',
+  description:
+    'Explore real-world case studies of custom AI automations, n8n workflows, GoHighLevel CRM setups, and SaaS platforms shipped by ReplyTentra engineers.',
+  canonical: '/work',
+  keywords: [
+    'ReplyTentra Case Studies',
+    'AI Automation Projects Portfolio',
+    'n8n Workflow Projects',
+    'GoHighLevel Implementation',
+    'SaaS Development Portfolio',
+    'Custom Software Projects',
+    'Automation Agency Portfolio',
+  ],
+});
 
 import { DEFAULT_WORK_PROJECTS } from './ClientWorkPage';
 
