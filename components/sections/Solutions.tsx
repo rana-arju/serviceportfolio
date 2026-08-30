@@ -6,39 +6,53 @@ import { ArrowUpRight } from 'lucide-react';
 import { ProjectCard } from '@/components/shared/ProjectCard';
 import { DEFAULT_WORK_PROJECTS } from '@/app/(main)/work/ClientWorkPage';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://serviceportfolio-backend.vercel.app/api/v1';
+
 export function Solutions() {
   const [projects, setProjects] = React.useState<any[]>([]);
 
-  React.useEffect(() => {
-    const local = localStorage.getItem('replytentra_recent_works');
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        const mapped = parsed.map((p: any) => ({
-          slug: p.slug,
-          title: p.title,
-          industry: p.industry,
-          challenge: p.challenge,
-          solution: p.solution,
-          result: p.result,
-          description: p.description,
-          techs: p.techs || [],
-          media: {
-            type: p.mediaType || 'image',
-            url: p.mediaUrl || p.thumbnail,
-            thumbnail: p.thumbnail,
-          },
-          timeline: p.timeline || [],
-        }));
-        setProjects(mapped.slice(0, 3));
-      } catch (e) {
-        console.error('Error parsing projects', e);
-        setProjects(DEFAULT_WORK_PROJECTS.slice(0, 3));
+  const fetchWorks = React.useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/works`, { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        const data = json.data || [];
+        if (data.length > 0) {
+          const mapped = data.map((p: any) => ({
+            slug: p.slug,
+            title: p.title,
+            industry: p.industry,
+            challenge: p.challenge,
+            solution: p.solution,
+            result: p.result,
+            description: p.description,
+            techs: p.techs || [],
+            media: {
+              type: p.mediaType || 'image',
+              url: p.mediaUrl || p.thumbnail,
+              thumbnail: p.thumbnail,
+            },
+            timeline: p.timeline || [],
+            liveUrl: p.liveUrl,
+          }));
+          setProjects(mapped.slice(0, 3));
+          return;
+        }
       }
-    } else {
-      setProjects(DEFAULT_WORK_PROJECTS.slice(0, 3));
+    } catch (e) {
+      console.error('Failed to load recent works:', e);
     }
+    setProjects(DEFAULT_WORK_PROJECTS.slice(0, 3));
   }, []);
+
+  React.useEffect(() => {
+    fetchWorks();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'replytentra_works_updated') fetchWorks();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [fetchWorks]);
 
   return (
     <section className="py-20 sm:py-28 bg-background">

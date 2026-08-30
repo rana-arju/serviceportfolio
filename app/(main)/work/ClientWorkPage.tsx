@@ -121,39 +121,62 @@ interface ClientWorkPageProps {
   defaultProjects: Project[];
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://serviceportfolio-backend.vercel.app/api/v1';
+
+function mapWork(p: any): Project {
+  return {
+    slug: p.slug,
+    title: p.title,
+    industry: p.industry,
+    challenge: p.challenge,
+    solution: p.solution,
+    result: p.result,
+    description: p.description,
+    techs: p.techs || [],
+    media: {
+      type: p.mediaType || 'image',
+      url: p.mediaUrl || p.thumbnail,
+      thumbnail: p.thumbnail,
+    },
+    timeline: p.timeline || [],
+    liveUrl: p.liveUrl,
+  };
+}
+
 export function ClientWorkPage({ defaultProjects }: ClientWorkPageProps) {
   const [projects, setProjects] = React.useState<Project[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const fetchWorks = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/works`, { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        const data: any[] = json.data || [];
+        if (data.length > 0) {
+          setProjects(data.map(mapWork));
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch works from API:', e);
+    }
+    // Fallback to default projects
+    setProjects(defaultProjects);
+    setLoading(false);
+  }, [defaultProjects]);
 
   React.useEffect(() => {
-    const local = localStorage.getItem('replytentra_recent_works');
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        const mapped = parsed.map((p: any) => ({
-          slug: p.slug,
-          title: p.title,
-          industry: p.industry,
-          challenge: p.challenge,
-          solution: p.solution,
-          result: p.result,
-          description: p.description,
-          techs: p.techs || [],
-          media: {
-            type: p.mediaType || 'image',
-            url: p.mediaUrl || p.thumbnail,
-            thumbnail: p.thumbnail,
-          },
-          timeline: p.timeline || [],
-        }));
-        setProjects(mapped);
-      } catch (e) {
-        console.error('Error parsing projects', e);
-        setProjects(defaultProjects);
-      }
-    } else {
-      setProjects(defaultProjects);
-    }
-  }, [defaultProjects]);
+    fetchWorks().finally(() => setLoading(false));
+
+    // Listen for storage events from dashboard updates (same browser)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'replytentra_works_updated') fetchWorks();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [fetchWorks]);
 
   return (
     <div className="relative py-16 sm:py-24 bg-background overflow-hidden min-h-screen">

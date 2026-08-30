@@ -249,19 +249,22 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const loadAllData = () => {
+  const loadAllData = async () => {
     const contactsData = JSON.parse(localStorage.getItem(CONTACTS_KEY) || '[]');
     const bookingsData = JSON.parse(localStorage.getItem(BOOKINGS_KEY) || '[]');
-    let worksData = JSON.parse(localStorage.getItem(WORKS_KEY) || '[]');
-
-    if (worksData.length === 0) {
-      localStorage.setItem(WORKS_KEY, JSON.stringify(DEFAULT_WORKS));
-      worksData = DEFAULT_WORKS;
-    }
-
     setContacts(contactsData.sort((a: any, b: any) => b.id - a.id));
     setBookings(bookingsData.sort((a: any, b: any) => b.id - a.id));
-    setWorks(worksData);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/works`, { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        setWorks(json.data || []);
+      }
+    } catch (e) {
+      console.error('Failed to load works', e);
+      setWorks(DEFAULT_WORKS);
+    }
   };
 
   const loadUsers = async () => {
@@ -365,12 +368,16 @@ export default function AdminDashboard() {
         }
       }
 
-      let worksData = JSON.parse(localStorage.getItem(WORKS_KEY) || '[]');
-      if (worksData.length === 0) {
-        localStorage.setItem(WORKS_KEY, JSON.stringify(DEFAULT_WORKS));
-        worksData = DEFAULT_WORKS;
+      try {
+        const worksRes = await fetch(`${API_BASE_URL}/works`, { cache: 'no-store' });
+        if (worksRes.ok) {
+          const json = await worksRes.json();
+          setWorks(json.data || []);
+        }
+      } catch (e) {
+        console.error('Failed to load works', e);
+        setWorks(DEFAULT_WORKS);
       }
-      setWorks(worksData);
     } catch (error) {
       console.error('Failed to load data from backend:', error);
     }
@@ -708,7 +715,7 @@ export default function AdminDashboard() {
     setIsWorkModalOpen(true);
   };
 
-  const saveWork = (e: React.FormEvent) => {
+  const saveWork = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (userRole === 'MODERATOR') {
@@ -728,23 +735,51 @@ export default function AdminDashboard() {
       return;
     }
 
-    let updatedWorks = [...works];
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const { accessToken } = JSON.parse(session);
 
-    if (editingWork) {
-      // Edit
-      updatedWorks = updatedWorks.map(w => w.id === editingWork.id ? { ...w, ...workForm } : w);
-    } else {
-      // Add
-      const newId = Date.now().toString();
-      updatedWorks.push({ id: newId, ...workForm });
+    try {
+      if (editingWork && editingWork.id) {
+        // Edit
+        const res = await fetch(`${API_BASE_URL}/works/${editingWork.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(workForm),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setWorks(works.map(w => w.id === editingWork.id ? result.data : w));
+        }
+      } else {
+        // Add
+        const res = await fetch(`${API_BASE_URL}/works`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(workForm),
+        });
+        if (res.ok) {
+          const result = await res.json();
+          setWorks([...works, result.data]);
+        }
+      }
+      
+      // Notify other tabs (like work/page.tsx) that works have updated
+      window.localStorage.setItem('replytentra_works_updated', Date.now().toString());
+      setIsWorkModalOpen(false);
+    } catch (e) {
+      console.error('Failed to save work', e);
+      alert('Failed to save work.');
     }
-
-    localStorage.setItem(WORKS_KEY, JSON.stringify(updatedWorks));
-    setWorks(updatedWorks);
-    setIsWorkModalOpen(false);
   };
 
-  const deleteWork = (id: string) => {
+  const deleteWork = async (id: string) => {
     if (userRole === 'MODERATOR') {
       alert('Forbidden: Moderators cannot delete portfolio items.');
       return;
@@ -754,9 +789,26 @@ export default function AdminDashboard() {
       return;
     }
 
-    const updatedWorks = works.filter(w => w.id !== id);
-    localStorage.setItem(WORKS_KEY, JSON.stringify(updatedWorks));
-    setWorks(updatedWorks);
+    const session = localStorage.getItem(AUTH_KEY);
+    if (!session) return;
+    const { accessToken } = JSON.parse(session);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/works/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (res.ok) {
+        setWorks(works.filter(w => w.id !== id));
+        window.localStorage.setItem('replytentra_works_updated', Date.now().toString());
+      }
+    } catch (e) {
+      console.error('Failed to delete work', e);
+      alert('Failed to delete work.');
+    }
   };
 
   const addTimelineStep = () => {
