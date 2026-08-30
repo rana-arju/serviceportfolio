@@ -6,6 +6,12 @@ import { AnimatedBackground } from '@/components/ui/AnimatedBackground';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Cpu, HelpCircle, Lightbulb, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 
+function getYouTubeId(url: string) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
 export default function ProjectDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -126,7 +132,7 @@ export default function ProjectDetailPage() {
         <div className="w-full aspect-video rounded-3xl overflow-hidden border border-border bg-card shadow-2xl relative group">
           {project.media.type === 'youtube' ? (
             <iframe
-              src={`${project.media.url}?autoplay=0&rel=0`}
+              src={getYouTubeId(project.media.url) ? `https://www.youtube.com/embed/${getYouTubeId(project.media.url)}?autoplay=0&rel=0` : project.media.url}
               title={project.title}
               className="w-full h-full border-0 absolute inset-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -1,8 +1,14 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+function getYouTubeId(url: string) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 export interface Project {
   slug: string;
@@ -31,28 +37,48 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, index }: ProjectCardProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const youtubeId = project.media.type === 'youtube' ? getYouTubeId(project.media.url) : null;
+  const embedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0` : project.media.url;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay: index * 0.15 }}
-      whileHover={{ y: -6 }}
+      whileHover={isPlaying ? {} : { y: -6 }}
       className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:shadow-xl hover:border-accent/30 transition-all duration-300"
     >
       {/* Media Preview Container */}
-      <div className="relative aspect-video w-full overflow-hidden bg-slate-950/20 border-b border-border">
-        <img
-          src={project.media.thumbnail}
-          alt={project.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-550 ease-out"
-        />
-        <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 transition-colors duration-300" />
-        {project.media.type === 'youtube' && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-accent/90 text-accent-foreground flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-all duration-300">
-              <Play className="w-5 h-5 fill-current ml-0.5" />
-            </div>
+      <div className="relative aspect-video w-full overflow-hidden bg-slate-950/20 border-b border-border z-10">
+        {project.media.type === 'youtube' && isPlaying && embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={project.title}
+            className="w-full h-full absolute inset-0 border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        ) : (
+          <div 
+            className={`w-full h-full relative ${project.media.type === 'youtube' ? 'cursor-pointer' : ''}`}
+            onClick={() => project.media.type === 'youtube' && setIsPlaying(true)}
+          >
+            <img
+              src={project.media.thumbnail}
+              alt={project.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-550 ease-out"
+            />
+            <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 transition-colors duration-300" />
+            {project.media.type === 'youtube' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-accent/90 text-accent-foreground flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-all duration-300">
+                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
