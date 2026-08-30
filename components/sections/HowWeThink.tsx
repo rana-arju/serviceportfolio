@@ -43,7 +43,7 @@ export function HowWeThink() {
         />
 
         {/* Timeline Line & Grid layout */}
-        <div className="mt-20 relative border-l border-border max-w-4xl mx-auto pl-6 sm:pl-10 space-y-12">
+        <div className="mt-20 relative border-l border-border max-w-4xl mx-auto ml-10 sm:ml-auto pl-6 sm:pl-10 space-y-12">
           {PROCESS_STEPS.map((step, i) => (
             <motion.div
               key={step.step}

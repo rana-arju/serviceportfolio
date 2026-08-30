@@ -86,10 +86,10 @@ export function Footer() {
 
       {/* Main Footer Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
 
           {/* Brand Column */}
-          <div className="sm:col-span-2 lg:col-span-5 space-y-5">
+          <div className="col-span-2 lg:col-span-5 space-y-5">
             {/* Logo */}
             <div className="relative w-36 h-9">
               <Image
@@ -133,7 +133,7 @@ export function Footer() {
           </div>
 
           {/* Services */}
-          <div className="lg:col-span-3 space-y-4">
+          <div className="col-span-1 lg:col-span-3 space-y-4">
             <h4 className="text-xs font-bold tracking-widest text-indigo-500 dark:text-indigo-400 uppercase">Services</h4>
             <ul className="space-y-2.5">
               {SERVICES.map(({ name, href }) => (
@@ -151,7 +151,7 @@ export function Footer() {
           </div>
 
           {/* Company */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="col-span-1 lg:col-span-4 space-y-4">
             <h4 className="text-xs font-bold tracking-widest text-indigo-500 dark:text-indigo-400 uppercase">Company</h4>
             <ul className="space-y-2.5">
               {COMPANY.map(({ name, href }) => (
